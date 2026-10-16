@@ -1,0 +1,36 @@
+# Capa de producción para el VPS (V2Networks u otro con Docker).
+# Agrega Caddy como proxy con HTTPS automático y cierra los puertos internos.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+      EMAIL_ADMIN: ${EMAIL_ADMIN}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - web
+      - api
+
+  api:
+    ports: !override []          # solo Caddy habla con la API
+
+  web:
+    ports: !override []
+
+  db:
+    ports: !override []
+
+volumes:
+  caddydata:
+  caddyconfig:

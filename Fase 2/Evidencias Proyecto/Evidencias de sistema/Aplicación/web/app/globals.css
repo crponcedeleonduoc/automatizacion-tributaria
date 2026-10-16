@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+body { @apply bg-white text-tinta antialiased; }
+a { @apply text-azul; }
+a:hover { @apply text-azul-oscuro; }
+input, select, button, textarea { font-family: inherit; }
+
+@layer components {
+  .contenedor { @apply mx-auto w-full max-w-sitio px-5 md:px-8; }
+  .kicker { @apply text-[13px] font-bold uppercase tracking-[0.08em] text-naranja; }
+  .titulo { @apply text-[32px] font-extrabold leading-[1.1] tracking-[-0.02em] text-azul md:text-[40px]; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-[15px] text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-azul { @apply btn bg-azul !text-white hover:bg-azul-oscuro shadow-[0_2px_6px_rgba(0,71,187,0.25)]; }
+  .btn-naranja { @apply btn bg-naranja !text-white hover:bg-naranja-oscuro; }
+  .btn-borde-naranja { @apply btn border-2 border-naranja bg-white text-azul hover:bg-naranja-claro; }
+  .btn-borde-azul { @apply btn border-2 border-azul bg-white text-azul hover:bg-azul-claro; }
+  .btn-borde { @apply btn border-[1.5px] border-borde-campo bg-white text-tinta hover:bg-fondo; }
+  .campo { @apply w-full rounded-[10px] border-[1.5px] border-borde-campo bg-white px-[14px] py-[13px] text-base text-tinta outline-none transition focus:border-azul focus:ring-[3px] focus:ring-azul/15 disabled:bg-fondo; }
+  .etiqueta { @apply mb-1.5 block text-sm font-semibold text-tinta; }
+  .tarjeta { @apply rounded-2xl border border-borde bg-white p-7 shadow-card; }
+  .chip { @apply rounded-md border border-azul-borde px-2 py-[5px] text-xs font-bold text-azul hover:bg-azul-claro; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { @apply inline-block rounded-full border-4 border-borde; border-top-color: #0047BB; animation: spin 0.9s linear infinite; }

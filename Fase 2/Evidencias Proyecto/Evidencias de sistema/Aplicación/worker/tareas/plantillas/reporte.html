@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{{ cfg.titulo }} · {{ empresa.rut }}</title>
+<style>
+  @page { size: Letter; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Manrope", "Segoe UI", Arial, sans-serif; color: #0F1B33; font-size: 10.5px; line-height: 1.4; }
+  h1 { font-size: 22px; margin: 0; color: #0047BB; letter-spacing: -0.02em; }
+  h2 { font-size: 13px; margin: 22px 0 8px; color: #0047BB; border-bottom: 2px solid #0047BB; padding-bottom: 4px; letter-spacing: -0.01em; }
+  .cab { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0047BB; padding-bottom: 10px; margin-bottom: 14px; }
+  .marca { font-size: 20px; font-weight: 800; color: #0047BB; letter-spacing: -0.03em; }
+  .marca span { color: #FF8C42; }
+  .meta { font-size: 9.5px; color: #5B6478; text-align: right; }
+  .meta b { color: #0F1B33; }
+  .emp { margin: 4px 0 0; font-size: 12px; font-weight: 700; }
+  .emp small { color: #5B6478; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; page-break-inside: auto; }
+  th { background: #0047BB; color: #fff; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 7px; }
+  td { padding: 5px 7px; border-bottom: 1px solid #E6E9F0; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  tr:nth-child(even) td { background: #FAFBFD; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.total td { font-weight: 800; background: #EEF3FC; border-top: 2px solid #0047BB; }
+  .resumen { width: 60%; }
+  .resumen td { font-size: 11.5px; padding: 7px 9px; }
+  .resumen tr.total td { background: #0047BB; color: #fff; font-size: 13px; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+  .abierta { background: #FFF4EC; color: #8A4A18; }
+  .cerrada { background: #E6F6EC; color: #1B8A4C; }
+  .alta { color: #C0392B; font-weight: 700; }
+  .media { color: #B8641A; font-weight: 700; }
+  .nota { margin-top: 6px; font-size: 9px; color: #7A839A; }
+  .kpis { display: flex; gap: 10px; margin: 10px 0 4px; }
+  .kpi { flex: 1; border: 1px solid #E6E9F0; border-radius: 8px; padding: 8px 10px; }
+  .kpi .t { font-size: 8.5px; color: #7A839A; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .kpi .v { font-size: 15px; font-weight: 800; margin-top: 2px; }
+  .kpi.rojo .v { color: #C0392B; }
+  .notas { margin-top: 18px; padding: 10px 12px; background: #F6F8FC; border-left: 3px solid #FF8C42; white-space: pre-wrap; font-size: 10px; }
+  .vacio { color: #7A839A; font-style: italic; padding: 8px 0; }
+</style>
+</head>
+<body>
+
+<div class="cab">
+  <div>
+    <div class="marca">a<span>SII</span>stente</div>
+    <h1>{{ cfg.titulo }}</h1>
+    <p class="emp">{{ empresa.razon_social or empresa.rut }} <small>· RUT {{ empresa.rut }}</small></p>
+  </div>
+  <div class="meta">
+    <div><b>Período:</b> {{ desde }} a {{ hasta }}</div>
+    <div><b>Generado:</b> {{ generado }}</div>
+    <div><b>Preparado por:</b> {{ usuario.nombre or usuario.email }}</div>
+  </div>
+</div>
+
+{# ---------------- RESUMEN ---------------- #}
+{% if cfg.bloques.resumen.activo %}
+<h2>Resumen de deuda</h2>
+<table class="resumen">
+  <tr><td>Deuda TGR (certificado{% if tgr and tgr.fecha_emision %} del {{ tgr.fecha_emision }}{% endif %})</td><td class="n">{{ resumen.tgr | clp }}</td></tr>
+  <tr><td>F29 no declarados / observados ({{ resumen.n_f29 }} período{{ 's' if resumen.n_f29 != 1 }})</td><td class="n">{{ resumen.f29_nd | clp }}</td></tr>
+  <tr class="total"><td>Total</td><td class="n">{{ resumen.total | clp }}</td></tr>
+</table>
+{% if resumen.f29_faltan_multa %}
+<p class="nota">{{ resumen.f29_faltan_multa }} período(s) de F29 sin monto con multa registrado: se suma su monto base (IVA de compras del período). El monto definitivo con reajuste, interés y multa lo determina el SII.</p>
+{% endif %}
+{% endif %}
+
+{# ---------------- TGR ---------------- #}
+{% if cfg.bloques.tgr.activo %}
+<h2>Deuda TGR · certificado de Tesorería</h2>
+{% if not tgr %}
+<p class="vacio">Sin certificado TGR consultado todavía.</p>
+{% else %}
+<div class="kpis">
+  <div class="kpi {{ 'rojo' if tgr.total_morosa }}"><div class="t">Deuda liquidada morosa</div><div class="v">{{ tgr.total_morosa | clp }}</div></div>
+  <div class="kpi"><div class="t">Deuda no vencida</div><div class="v">{{ tgr.total_no_vencida | clp }}</div></div>
+  <div class="kpi"><div class="t">Giros</div><div class="v">{{ tgr.lineas | length }}</div></div>
+  <div class="kpi"><div class="t">Emisión certificado</div><div class="v" style="font-size:12px">{{ tgr.fecha_emision or tgr.consultado.strftime('%d-%m-%Y') }}</div></div>
+</div>
+{% set cols = cfg.bloques.tgr.columnas %}
+{% if tgr.lineas %}
+<table>
+  <thead><tr>{% for c in cols %}<th class="{{ 'n' if c in ['neta','reajuste','interes','multa','total'] }}">{{ bloques.tgr.columnas[c] }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for l in tgr.lineas %}
+    <tr>{% for c in cols %}
+      {% if c in ['neta','reajuste','interes','multa','total'] %}<td class="n">{{ l[c] | clp }}</td>
+      {% else %}<td>{{ l[c] or '' }}</td>{% endif %}
+    {% endfor %}</tr>
+  {% endfor %}
+    <tr class="total">
+      {% for c in cols %}
+        {% if loop.first %}<td colspan="{{ cols | length - (['neta','reajuste','interes','multa','total'] | select('in', cols) | list | length) }}">Total deuda morosa (CLP)</td>
+        {% elif c in ['neta','reajuste','interes','multa','total'] %}<td class="n">{{ (tgr.lineas | sum(attribute=c)) | clp }}</td>{% endif %}
+      {% endfor %}
+    </tr>
+  </tbody>
+</table>
+{% else %}<p class="vacio">Sin giros pendientes. Sin deuda fiscal registrada.</p>{% endif %}
+{% endif %}
+{% endif %}
+
+{# ---------------- F29 ---------------- #}
+{% if cfg.bloques.f29.activo %}
+<h2>F29 no declarados / observados</h2>
+{% if not f29 %}
+<p class="vacio">No hay períodos sin declarar ni observados en el rango.</p>
+{% else %}
+{% set cols = cfg.bloques.f29.columnas %}
+<table>
+  <thead><tr>{% for c in cols %}<th class="{{ 'n' if c in ['monto','monto_multa'] }}">{{ bloques.f29.columnas[c] }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for f in f29 %}
+    <tr>{% for c in cols %}
+      {% if c == 'monto' %}<td class="n">{{ f.monto | clp if f.monto else '—' }}</td>
+      {% elif c == 'monto_multa' %}<td class="n">{{ f.monto_multa | clp if f.monto_multa is not none else '—' }}</td>
+      {% elif c == 'estado' %}<td><span class="pill {{ 'cerrada' if f.estado == 'Cerrada' else 'abierta' }}">{{ f.estado }}</span></td>
+      {% elif c == 'prioridad' %}<td class="{{ f.prioridad | lower }}">{{ f.prioridad }}</td>
+      {% elif c == 'accion' %}<td style="white-space:nowrap">{{ f.accion }}</td>
+      {% else %}<td>{{ f[c] }}</td>{% endif %}
+    {% endfor %}</tr>
+  {% endfor %}
+    <tr class="total">
+      {% for c in cols %}
+        {% if loop.first %}<td colspan="{{ cols | length - (['monto','monto_multa'] | select('in', cols) | list | length) }}">Total ({{ f29 | length }} períodos)</td>
+        {% elif c == 'monto' %}<td class="n">{{ resumen.f29_base | clp }}</td>
+        {% elif c == 'monto_multa' %}<td class="n">{{ (f29 | selectattr('monto_multa') | sum(attribute='monto_multa')) | clp }}</td>{% endif %}
+      {% endfor %}
+    </tr>
+  </tbody>
+</table>
+<p class="nota">Monto = base estimada desde el IVA de compras del período (o valor ingresado). Monto con multa = valor determinado por el SII con reajuste, interés y multa{% if resumen.f29_faltan_multa %}; {{ resumen.f29_faltan_multa }} período(s) aún sin ese valor{% endif %}.</p>
+{% endif %}
+{% endif %}
+
+{# ---------------- RCV ---------------- #}
+{% if cfg.bloques.rcv.activo %}
+<h2>Movimientos RCV</h2>
+{% if not rcv %}
+<p class="vacio">Sin documentos en el rango.</p>
+{% else %}
+{% set cols = cfg.bloques.rcv.columnas %}
+<table>
+  <thead><tr>{% for c in cols %}<th class="{{ 'n' if c in ['neto','iva','total'] }}">{{ bloques.rcv.columnas[c] }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for d in rcv %}
+    <tr>{% for c in cols %}
+      {% if c in ['neto','iva','total'] %}<td class="n">{{ d[c] | clp }}</td>{% else %}<td>{{ d[c] }}</td>{% endif %}
+    {% endfor %}</tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="nota">{{ rcv | length }} documento(s){% if rcv | length >= 3000 %} (se muestran los primeros 3.000){% endif %}.</p>
+{% endif %}
+{% endif %}
+
+{% if cfg.notas %}
+<div class="notas">{{ cfg.notas }}</div>
+{% endif %}
+
+</body>
+</html>

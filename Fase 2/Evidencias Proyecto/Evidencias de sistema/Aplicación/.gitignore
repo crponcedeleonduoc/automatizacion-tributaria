@@ -1,0 +1,14 @@
+# Secretos — NUNCA subir
+.env
+env.listo
+
+*.pyc
+__pycache__/
+.venv/
+node_modules/
+.next/
+out/
+datos/
+*.log
+.DS_Store
+Thumbs.db

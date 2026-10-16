@@ -1,0 +1,30 @@
+{
+	email {$EMAIL_ADMIN}
+}
+
+{$DOMINIO} {
+	encode gzip
+
+	# La API vive bajo /api y la documentación bajo /docs
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /docs* {
+		reverse_proxy api:8000
+	}
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	# Todo lo demás es el frontend Next.js
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
