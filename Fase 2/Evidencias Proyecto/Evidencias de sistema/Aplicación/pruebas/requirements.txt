@@ -1,0 +1,5 @@
+# Dependencias solo para ejecutar las pruebas.
+#   pip install -r pruebas/requirements.txt
+#   pytest
+pytest==8.3.3
+cryptography==43.0.1
